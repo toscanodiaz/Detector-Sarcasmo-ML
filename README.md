@@ -1,2 +1,2 @@
 # Detector-Sarcasmo-ML
-Algoritmo de detección de sarcasmo
+Este proyecto implementa un flujo de preprocesamiento y preparación de datos para la detección de sarcasmo en titulares de noticias usando machine learning. A partir del dataset Sarcasm Headlines Dataset, se realiza la limpieza del texto, la separación en conjuntos de entrenamiento y prueba, la vectorización con TF-IDF y el escalamiento de características, dejando los datos listos para entrenar y evaluar modelos de clasificación.

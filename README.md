@@ -1,6 +1,6 @@
 # Detector-Sarcasmo-ML
 Este proyecto implementa un flujo de preprocesamiento y preparación de datos para la detección de sarcasmo en titulares de noticias usando deep learning. A partir del dataset [News Headlines For Sarcasm Detection
-](https://www.kaggle.com/datasets/rmisra/news-headlines-dataset-for-sarcasm-detection) se realiza la limpieza del texto, la separación en conjuntos de entrenamiento y prueba, la vectorización secuencial con TextVectorization y el entrenamiento de una red neuronal recurrente para clasificar titulares sarcásticos y no sarcásticos.
+](https://www.kaggle.com/datasets/rmisra/news-headlines-dataset-for-sarcasm-detection) se realiza la limpieza del texto, la separación en conjuntos de entrenamiento, prueba y validación, la vectorización secuencial con TextVectorization y el entrenamiento de una red neuronal recurrente para clasificar titulares sarcásticos y no sarcásticos.
 
 ---
 

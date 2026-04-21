@@ -23,13 +23,13 @@ Finalmente se obtuvieron tres conjuntos secuenciales `X_train_vec`, `X_val_vec` 
 ## Implementación del modelo
 Para la implementación del modelo se utilizó un enfoque de deep learning para clasificación binaria de texto. La elección de una red neuronal profunda se justifica porque el sarcasmo no depende únicamente de la presencia aislada de ciertas palabras, sino también del orden en que aparecen, de las relaciones contextuales entre términos y de contrastes semánticos dentro de una secuencia corta, por lo que se optó por una arquitectura recurrente capaz de procesar el texto como secuencia y no como un conjunto de palabras independientes. El flujo completo de entrenamiento se implementó en `sarcasm.py`, mientras que la limpieza textual se encapsuló en `clean.py` para poder reutilizarla tanto en entrenamiento como en la interfaz.
 
-La arquitectura final del modelo fue una red secuencial con una capa de entrada para secuencias de longitud fija, una capa `Embedding(input_dim=10000, output_dim=128)`, una capa `Bidirectional(LSTM(64))`, una capa `Dropout(0.3)`, una capa densa oculta de 64 neuronas con activación `ReLU`, una segunda capa `Dropout(0.3)` y una capa final `Dense(1, activation="sigmoid")`. 
+La arquitectura final del modelo fue una red secuencial con una capa de entrada para secuencias de longitud fija, una capa `Embedding(input_dim=8000, output_dim=64)`, una capa `Bidirectional(LSTM(32))`, una capa `Dropout(0.4)`, una capa densa oculta de 64 neuronas con activación `ReLU`, una segunda capa `Dropout(0.4)` y una capa final `Dense(1, activation="sigmoid")`. 
 
 La capa Embedding se utilizó porque una red neuronal no trabaja directamente con texto crudo, sino con representaciones numéricas densas; cada token fue proyectado a un vector de dimensión 128 pues tienen suficiente capacidad para aprender relaciones semánticas entre palabras pero no incrementan de forma excesiva el número de parámetros.
 
-La capa principal del modelo fue una Bidirectional LSTM con 64 unidades. Se eligió una LSTM porque este tipo de red está diseñada para trabajar con secuencias y capturar dependencias contextuales entre palabras; se usó en su versión bidireccional para que el modelo pudiera procesar el titular de izquierda a derecha y viceversa, lo cual es útil en la detección del sarcasmo ya que muchas veces la interpretación depende del contraste entre el inicio y el final del enunciado o de cómo una palabra cambia de significado según el contexto que se le da. El valor de 64 unidades brinda suficiente capacidad de modelado sin volver el entrenamiento innecesariamente costoso para el tamaño del dataset y la longitud de las secuencias.
+La capa principal del modelo fue una Bidirectional LSTM con 32 unidades. Se eligió una LSTM porque este tipo de red está diseñada para trabajar con secuencias y capturar dependencias contextuales entre palabras; se usó en su versión bidireccional para que el modelo pudiera procesar el titular de izquierda a derecha y viceversa, lo cual es útil en la detección del sarcasmo ya que muchas veces la interpretación depende del contraste entre el inicio y el final del enunciado o de cómo una palabra cambia de significado según el contexto que se le da. El valor de 32 unidades brinda suficiente capacidad de modelado sin volver el entrenamiento innecesariamente costoso para el tamaño del dataset y la longitud de las secuencias.
 
-Las capas `Dropout(0.3)` se añadieron como mecanismo de regularización para desactivar aleatoriamente una parte de las neuronas durante el entrenamiento y reducir el riesgo de overfitting, y con valor de 0.3 para frenar la memorización excesiva de patrones del conjunto de train sin ser tan alto para impedir el aprendizaje. Entre ambas capas de dropout se colocó una capa densa con 64 neuronas y activación ReLU para procesar la información aprendida por la LSTM y combinarla de forma más útil para la clasificación final. La salida se modeló con una única neurona y activación `sigmoid` porque el problema es binario y se requiere una salida entre 0 y 1 (interpretable como probabilidad de sarcasmo). 
+Las capas `Dropout(0.4)` se añadieron como mecanismo de regularización para desactivar aleatoriamente una parte de las neuronas durante el entrenamiento y reducir el riesgo de overfitting, y con valor de 0.4 para frenar la memorización excesiva de patrones del conjunto de train sin ser tan alto para impedir el aprendizaje. Entre ambas capas de dropout se colocó una capa densa con 32 neuronas y activación ReLU para procesar la información aprendida por la LSTM y combinarla de forma más útil para la clasificación final. La salida se modeló con una única neurona y activación `sigmoid` porque el problema es binario y se requiere una salida entre 0 y 1 (interpretable como probabilidad de sarcasmo). 
 
 El modelo se compiló con el optimizador `Adam`, la función de pérdida `binary_crossentropy` y la métrica `accuracy`. Se eligió Adam por su buen comportamiento general en redes neuronales, principalmente al trabajar con datos textuales y múltiples parámetros. La función `binary_crossentropy` es la más adecuada para una salida sigmoide en tareas de clasificación binaria pues penaliza más fuertemente las predicciones erróneas y permite entrenar el modelo en términos probabilísticos; también se configuró un entrenamiento de 10 épocas con tamaño `batch_size = 32` que es un valor estándar para equilibrar estabilidad del gradiente y eficiencia computacional.
 
@@ -38,7 +38,21 @@ Para controlar el overfitting se incorporó `EarlyStopping` monitoreando `val_lo
 Finalmente el modelo entrenado se guardó en el archivo `modelo_dl.keras` y el vocabulario aprendido por `TextVectorization` se exportó a `vocabulario.txt` usando codificación UTF-8 y reconstruyendo exactamente la misma transformación de texto en la interfaz final implementada con Gradio; el usuario puede escribir un titular y analizarlo para obtener una predicción de sarcasmo o no sarcasmo junto con su probabilidad. 
 
 ## Evaluación inicial 
-La evaluación inicial del modelo se realizó primero sobre el conjunto de validation para monitorear el entrenamiento y detectar el mejor punto de aprendizaje, y después sobre el conjunto de test para estimar la capacidad de generalización final sobre datos completamente no vistos. Durante el entrenamiento se observó una mejora rápida en las métricas de train, donde `accuracy` pasó aproximadamente de 0.8062 en la primera época a 0.9719 en la cuarta, mientras que `loss` disminuyó de 0.4068 a 0.0733 indicando que la red fue capaz de aprender patrones de manera efectiva dentro del conjunto de train. Al mismo tiempo `val_loss` fue mejor en la primera época (0.3131) y empeoró progresivamente en las siguientes y `val_accuracy` dejó de mejorar después del inicio, lo que indica que el modelo comenzó a mostrar señales de overfitting a medida que avanzaban las épocas, por lo cual se justifica la incorporación de EarlyStopping.
+La evaluación inicial del modelo se realizó primero sobre el conjunto de validation para monitorear el entrenamiento y detectar el mejor punto de aprendizaje, y después sobre el conjunto de test para estimar la capacidad de generalización final sobre datos completamente no vistos. 
+
+### Iteración 1
+
+Se utilziaron los siguientes hiperparámetros, marcando la línea base del modelo: 
+
+- ***Embedding:*** 128
+- ***BiLSTM:*** 64
+- ***Dense:*** 64 
+- ***Dropout:*** 0.3
+- ***max_tokens:*** 10000
+- ***output_sequence_length:*** 30 
+- ***patience:*** 3
+
+Durante el entrenamiento se observó una mejora rápida en las métricas de train, donde `accuracy` pasó aproximadamente de 0.8062 en la primera época a 0.9719 en la cuarta, mientras que `loss` disminuyó de 0.4068 a 0.0733 indicando que la red fue capaz de aprender patrones de manera efectiva dentro del conjunto de train. Al mismo tiempo `val_loss` fue mejor en la primera época (0.3131) y empeoró progresivamente en las siguientes y `val_accuracy` dejó de mejorar después del inicio, lo que indica que el modelo comenzó a mostrar señales de overfitting a medida que avanzaban las épocas, por lo cual se justifica la incorporación de EarlyStopping.
 
 ### Validation
 En el conjunto de validación el modelo obtuvo los siguientes resultados
@@ -80,7 +94,74 @@ Esto indica que el modelo identificó correctamente 2591 titulares no sarcástic
 
 De forma general estas métricas indican que el modelo sí logró aprender patrones del sarcasmo en los titulares y que tuvo un buen desempeño para ser una primera implementación; el `accuracy` mayor al 85% y `F1-score` cercano a 0.85 en test indica que la arquitectura funciona bien para este problema, y como los resultados de validation y test son parecidos se puede decir que el modelo generaliza de forma adecuada y no solo memoriza los datos de entrenamiento. Sin embargo el comportamiento de `val_loss` durante el entrenamiento sugiere que todavía se puede mejorar ajustando algunos hiperparámetros por ejemplo el tamaño del embedding, el número de unidades de la LSTM, el valor de `Dropout` o la longitud máxima de las secuencias. 
 
+## Refinamiento del modelo 
 
+### Iteración 2
+
+- ***Embedding:*** 64
+- ***BiLSTM:*** 32
+- ***Dense:*** 32 
+- ***Dropout:*** 0.4
+- ***max_tokens:*** 8000
+- ***output_sequence_length:*** 25 
+- ***patience:*** 2
+- ***leaning_rate:*** 0.0005
+
+### Iteración 3
+
+- ***Embedding:*** 64
+- ***BiLSTM:*** 32
+- ***Dense:*** 32 
+- ***Dropout:*** 0.5
+- ***max_tokens:*** 5000
+- ***output_sequence_length:*** 20 
+- ***patience:*** 2
+- ***leaning_rate:*** 0.0005
+
+### Iteración 4
+
+- ***Embedding:*** 64
+- ***BiLSTM:*** 32
+- ***Dense:*** 32 
+- ***Dropout:*** 0.45
+- ***max_tokens:*** 8000
+- ***output_sequence_length:*** 20 
+- ***patience:*** 2
+- ***leaning_rate:*** 0.0005
+
+### Iteración 4.1
+
+- ***Embedding:*** 64
+- ***BiLSTM:*** 32
+- ***Dense:*** 32 
+- ***Dropout:*** 0.4
+- ***max_tokens:*** 8000
+- ***output_sequence_length:*** 20 
+- ***patience:*** 2
+- ***leaning_rate:*** 0.0003
+
+### Iteración 5
+
+- ***Embedding:*** 64
+- ***BiLSTM:*** 32
+- ***Dense:*** 32 
+- ***Dropout:*** 0.4
+- ***max_tokens:*** 8000
+- ***output_sequence_length:*** 20 
+- ***patience:*** 2
+- ***leaning_rate:*** 0.0005
+- ***tf.keras.layers.GRU(32)***
+
+### Iteración 6
+
+- ***Embedding:*** 64
+- ***BiLSTM:*** 32
+- ***Dense:*** 32 
+- ***Dropout:*** 0.35
+- ***max_tokens:*** 8000
+- ***output_sequence_length:*** 25 
+- ***patience:*** 2
+- ***leaning_rate:*** 0.0005
 
 ---
 

@@ -16,7 +16,7 @@ Después se definieron las variables del problema siendo `x` la variable indepen
 
 Posteriormente e realizó la separación del conjunto de datos en train, test y validation usando la función `train_test_split` de scikit-learn en dos etapas; la división se hizo de forma que el 20% de los datos se fueron al conjunto de prueba y a partir del 80% restante se generó un conjunto de validación. Se estableció un valor fijo de `random_state = 42` para asegurar la reproducibilidad del experimento y también se utilizó el parámetro `stratify = y` para que las clases estén distribuídas uniformemente en los subconjuntos y evitar riesgo de overfitting o sesgos en el entrenamiento o evaluación del modelo. Como resultado final se obtuvieron 20,033 ejemplos para train, 2,862 para validation y 5,724 para test, lo cual permitió entrenar el modelo, monitorear su avance durante el ajuste y evaluar su desempeño sobre datos no vistos. 
 
-Ya que se está trabajando con texto es necesario convertirlo en representación numérica para poder aplicar algoritmos de clasificación, por lo que se aplicó la capa `TextVectorization` de Keras, configurada con `max_tokens = 10000` y `output_sequence_length = 30`. La capa aprende un vocabulario a partir del conjunto de entrenamiento y transforma cada titular en una secuencia de enteros de longitud fija. Una vez adaptada la capa con los datos de entrenamiento se transformaron los conjuntos de train, validation y test, obteniendo matrices con dimensiones (20033, 30), (2862, 30) y (5724, 30) respectivamente. 
+Ya que se está trabajando con texto es necesario convertirlo en representación numérica para poder aplicar algoritmos de clasificación, por lo que se aplicó la capa `TextVectorization` de Keras, configurada con `max_tokens = 8000` y `output_sequence_length = 25`. La capa aprende un vocabulario a partir del conjunto de entrenamiento y transforma cada titular en una secuencia de enteros de longitud fija. Una vez adaptada la capa con los datos de entrenamiento se transformaron los conjuntos de train, validation y test, obteniendo matrices con dimensiones (20033, 30), (2862, 30) y (5724, 30) respectivamente. 
 
 Finalmente se obtuvieron tres conjuntos secuenciales `X_train_vec`, `X_val_vec` y `X_test_vec` listos para ser utilizados como entrada del modelo; cada uno contiene los titulares transformados en secuencias enteras de longitud fija mediante `TextVectorization`. Al mismo tiempo, `y_train`, `y_val` y `y_test` contienen las etiquetas binarias asociadas a sarcasmo y no sarcasmo. 
 
@@ -25,7 +25,7 @@ Para la implementación del modelo se utilizó un enfoque de deep learning para 
 
 La arquitectura final del modelo fue una red secuencial con una capa de entrada para secuencias de longitud fija, una capa `Embedding(input_dim=8000, output_dim=64)`, una capa `Bidirectional(LSTM(32))`, una capa `Dropout(0.4)`, una capa densa oculta de 64 neuronas con activación `ReLU`, una segunda capa `Dropout(0.4)` y una capa final `Dense(1, activation="sigmoid")`. 
 
-La capa Embedding se utilizó porque una red neuronal no trabaja directamente con texto crudo, sino con representaciones numéricas densas; cada token fue proyectado a un vector de dimensión 128 pues tienen suficiente capacidad para aprender relaciones semánticas entre palabras pero no incrementan de forma excesiva el número de parámetros.
+La capa Embedding se utilizó porque una red neuronal no trabaja directamente con texto crudo, sino con representaciones numéricas densas; cada token fue proyectado a un vector de dimensión 64 pues tienen suficiente capacidad para aprender relaciones semánticas entre palabras pero no incrementan de forma excesiva el número de parámetros.
 
 La capa principal del modelo fue una Bidirectional LSTM con 32 unidades. Se eligió una LSTM porque este tipo de red está diseñada para trabajar con secuencias y capturar dependencias contextuales entre palabras; se usó en su versión bidireccional para que el modelo pudiera procesar el titular de izquierda a derecha y viceversa, lo cual es útil en la detección del sarcasmo ya que muchas veces la interpretación depende del contraste entre el inicio y el final del enunciado o de cómo una palabra cambia de significado según el contexto que se le da. El valor de 32 unidades brinda suficiente capacidad de modelado sin volver el entrenamiento innecesariamente costoso para el tamaño del dataset y la longitud de las secuencias.
 
@@ -33,7 +33,7 @@ Las capas `Dropout(0.4)` se añadieron como mecanismo de regularización para de
 
 El modelo se compiló con el optimizador `Adam`, la función de pérdida `binary_crossentropy` y la métrica `accuracy`. Se eligió Adam por su buen comportamiento general en redes neuronales, principalmente al trabajar con datos textuales y múltiples parámetros. La función `binary_crossentropy` es la más adecuada para una salida sigmoide en tareas de clasificación binaria pues penaliza más fuertemente las predicciones erróneas y permite entrenar el modelo en términos probabilísticos; también se configuró un entrenamiento de 10 épocas con tamaño `batch_size = 32` que es un valor estándar para equilibrar estabilidad del gradiente y eficiencia computacional.
 
-Para controlar el overfitting se incorporó `EarlyStopping` monitoreando `val_loss`, con `patience = 3` y `restore_best_weights = True` buscando maximizar el desempeño en entrenamiento y conservvar la mejor capacidad de generalización sobre datos no vistos. Con `patience = 3` el entrenamiento puede agregar algunas épocas más si validation deja de mejorar momentáneamente pero sin prolongarse de forma innecesaria. También se restauran los mejores pesos para asegurar que el modelo final corresponda al punto de mejor desempeño en validation y no al de la última época entrenada. 
+Para controlar el overfitting se incorporó `EarlyStopping` monitoreando `val_loss`, con `patience = 2` y `restore_best_weights = True` buscando maximizar el desempeño en entrenamiento y conservvar la mejor capacidad de generalización sobre datos no vistos. Con `patience = 2` el entrenamiento puede agregar algunas épocas más si validation deja de mejorar momentáneamente pero sin prolongarse de forma innecesaria. También se restauran los mejores pesos para asegurar que el modelo final corresponda al punto de mejor desempeño en validation y no al de la última época entrenada. 
 
 Finalmente el modelo entrenado se guardó en el archivo `modelo_dl.keras` y el vocabulario aprendido por `TextVectorization` se exportó a `vocabulario.txt` usando codificación UTF-8 y reconstruyendo exactamente la misma transformación de texto en la interfaz final implementada con Gradio; el usuario puede escribir un titular y analizarlo para obtener una predicción de sarcasmo o no sarcasmo junto con su probabilidad. 
 
@@ -129,7 +129,7 @@ De forma general estas métricas indican que el modelo sí logró aprender patro
 - ***patience:*** 2
 - ***leaning_rate:*** 0.0005
 
-## Iteración 4.1
+## Iteración 5
 
 - ***Embedding:*** 64
 - ***BiLSTM:*** 32
@@ -140,7 +140,7 @@ De forma general estas métricas indican que el modelo sí logró aprender patro
 - ***patience:*** 2
 - ***leaning_rate:*** 0.0003
 
-## Iteración 5
+## Iteración 6
 
 - ***Embedding:*** 64
 - ***BiLSTM:*** 32
@@ -152,7 +152,7 @@ De forma general estas métricas indican que el modelo sí logró aprender patro
 - ***leaning_rate:*** 0.0005
 - ***tf.keras.layers.GRU(32)***
 
-## Iteración 6
+## Iteración 7
 
 - ***Embedding:*** 64
 - ***BiLSTM:*** 32

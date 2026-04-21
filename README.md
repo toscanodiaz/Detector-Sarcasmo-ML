@@ -4,10 +4,10 @@ Este proyecto implementa un flujo de preprocesamiento y preparación de datos pa
 
 ---
 
-## Justificación del dataset
+# Justificación del dataset
 Se utilizará este dataset ya que tiene una estructura adecuada para un problema de clasificación de texto; contiene una columna con los titulares de noticias (`headline`) y una etiqueta binaria (`is_sarcastic`) que indica si el titular es sarcástico o no, facilitando trabajar directamente con técnicas de procesamiento de lenguaje natural al tener una entrada de texto clara y una salida bien definida para entrenar modelos supervisados. De la mano con esto también se eligió el dataset pues objetivo del proyecto es aplicar un modelo de deep learning a un problema real de clasificación de texto; los titulares de noticias son útiles porque acostumbran ser frases cortas, directas y con suficiente carga semántica como para que el modelo pueda aprender patrones asociados al sarcasmo. Como los headlines concentran la información en pocas palabras (a diferencia de otros textos más largos o ambiguos), son adecuados para trabajar con arquitecturas secuenciales. 
 
-## Descripción del preprocesado
+# Descripción del preprocesado
 El dataset está compuesto por titulares de noticias y una etiqueta `is_sarcastic` donde 1 representa que el texto es sarcástico y 0 que no lo es; también contiene las columnas `headline` con el texto a analizar y la columna `article_link` con los URLs que llevan a cada artículo. Esta última columna no fue utilizada para el preprocesamiento pues el objetivo es detectar el sarcasmo únicamente a partir de los titulares, por lo que no es una característica relevante para el análisis. 
 
 Como primer paso se cargó el archivo en formato JSON utilizando pandas y posteriormente se realizó una inspección inicial del dataset para conocer sus dimensiones, verificar los nombres de las columnas, identificar valores nulos en caso de existir y revisar la distribución de las clases para confirmar que la variable de entrada sería el texto del titular `headline` y la variable de salida la clase binaria `is_sarcastic`. 
@@ -20,7 +20,7 @@ Ya que se está trabajando con texto es necesario convertirlo en representación
 
 Finalmente se obtuvieron tres conjuntos secuenciales `X_train_vec`, `X_val_vec` y `X_test_vec` listos para ser utilizados como entrada del modelo; cada uno contiene los titulares transformados en secuencias enteras de longitud fija mediante `TextVectorization`. Al mismo tiempo, `y_train`, `y_val` y `y_test` contienen las etiquetas binarias asociadas a sarcasmo y no sarcasmo. 
 
-## Implementación del modelo
+# Implementación del modelo
 Para la implementación del modelo se utilizó un enfoque de deep learning para clasificación binaria de texto. La elección de una red neuronal profunda se justifica porque el sarcasmo no depende únicamente de la presencia aislada de ciertas palabras, sino también del orden en que aparecen, de las relaciones contextuales entre términos y de contrastes semánticos dentro de una secuencia corta, por lo que se optó por una arquitectura recurrente capaz de procesar el texto como secuencia y no como un conjunto de palabras independientes. El flujo completo de entrenamiento se implementó en `sarcasm.py`, mientras que la limpieza textual se encapsuló en `clean.py` para poder reutilizarla tanto en entrenamiento como en la interfaz.
 
 La arquitectura final del modelo fue una red secuencial con una capa de entrada para secuencias de longitud fija, una capa `Embedding(input_dim=8000, output_dim=64)`, una capa `Bidirectional(LSTM(32))`, una capa `Dropout(0.4)`, una capa densa oculta de 64 neuronas con activación `ReLU`, una segunda capa `Dropout(0.4)` y una capa final `Dense(1, activation="sigmoid")`. 
@@ -37,10 +37,10 @@ Para controlar el overfitting se incorporó `EarlyStopping` monitoreando `val_lo
 
 Finalmente el modelo entrenado se guardó en el archivo `modelo_dl.keras` y el vocabulario aprendido por `TextVectorization` se exportó a `vocabulario.txt` usando codificación UTF-8 y reconstruyendo exactamente la misma transformación de texto en la interfaz final implementada con Gradio; el usuario puede escribir un titular y analizarlo para obtener una predicción de sarcasmo o no sarcasmo junto con su probabilidad. 
 
-## Evaluación inicial 
+# Evaluación inicial 
 La evaluación inicial del modelo se realizó primero sobre el conjunto de validation para monitorear el entrenamiento y detectar el mejor punto de aprendizaje, y después sobre el conjunto de test para estimar la capacidad de generalización final sobre datos completamente no vistos. 
 
-### Iteración 1
+## Iteración 1
 
 Se utilziaron los siguientes hiperparámetros, marcando la línea base del modelo: 
 
@@ -94,9 +94,9 @@ Esto indica que el modelo identificó correctamente 2591 titulares no sarcástic
 
 De forma general estas métricas indican que el modelo sí logró aprender patrones del sarcasmo en los titulares y que tuvo un buen desempeño para ser una primera implementación; el `accuracy` mayor al 85% y `F1-score` cercano a 0.85 en test indica que la arquitectura funciona bien para este problema, y como los resultados de validation y test son parecidos se puede decir que el modelo generaliza de forma adecuada y no solo memoriza los datos de entrenamiento. Sin embargo el comportamiento de `val_loss` durante el entrenamiento sugiere que todavía se puede mejorar ajustando algunos hiperparámetros por ejemplo el tamaño del embedding, el número de unidades de la LSTM, el valor de `Dropout` o la longitud máxima de las secuencias. 
 
-## Refinamiento del modelo 
+# Refinamiento del modelo 
 
-### Iteración 2
+## Iteración 2
 
 - ***Embedding:*** 64
 - ***BiLSTM:*** 32
@@ -107,7 +107,7 @@ De forma general estas métricas indican que el modelo sí logró aprender patro
 - ***patience:*** 2
 - ***leaning_rate:*** 0.0005
 
-### Iteración 3
+## Iteración 3
 
 - ***Embedding:*** 64
 - ***BiLSTM:*** 32
@@ -118,7 +118,7 @@ De forma general estas métricas indican que el modelo sí logró aprender patro
 - ***patience:*** 2
 - ***leaning_rate:*** 0.0005
 
-### Iteración 4
+## Iteración 4
 
 - ***Embedding:*** 64
 - ***BiLSTM:*** 32
@@ -129,7 +129,7 @@ De forma general estas métricas indican que el modelo sí logró aprender patro
 - ***patience:*** 2
 - ***leaning_rate:*** 0.0005
 
-### Iteración 4.1
+## Iteración 4.1
 
 - ***Embedding:*** 64
 - ***BiLSTM:*** 32
@@ -140,7 +140,7 @@ De forma general estas métricas indican que el modelo sí logró aprender patro
 - ***patience:*** 2
 - ***leaning_rate:*** 0.0003
 
-### Iteración 5
+## Iteración 5
 
 - ***Embedding:*** 64
 - ***BiLSTM:*** 32
@@ -152,7 +152,7 @@ De forma general estas métricas indican que el modelo sí logró aprender patro
 - ***leaning_rate:*** 0.0005
 - ***tf.keras.layers.GRU(32)***
 
-### Iteración 6
+## Iteración 6
 
 - ***Embedding:*** 64
 - ***BiLSTM:*** 32

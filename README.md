@@ -182,8 +182,8 @@ En esta iteración buscó regularizar aún más el modelo con la intención de d
 
 — cambios —
 
-agregué métrica de curvas roc durante entrenamiento
-probé diferentes thresholds
+- agregué métrica de curvas roc durante entrenamiento
+- probé diferentes thresholds
 
 
 ---

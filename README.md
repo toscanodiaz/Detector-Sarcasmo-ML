@@ -105,6 +105,7 @@ Las iteraciones se compararon objetivamaente gracias al uso de las métricas `ac
 
 <img width="1920" height="1080" alt="cambiosxiteracion" src="https://github.com/user-attachments/assets/3ffcd27e-051a-4834-96ec-10bb3604b054" />
 
+# Hallazgos relevantes
 ## Iteración 2
 
 En esta iteración se redujo la complejidad del modelo con los siguientes ajustes  
@@ -133,16 +134,7 @@ En esta iteración buscó regularizar aún más el modelo con la intención de d
 - ***patience:*** 2
 - ***learning_rate:*** 0.0005
 
-## Iteración 4
-
-- ***Embedding:*** 64
-- ***BiLSTM:*** 32
-- ***Dense:*** 32 
-- ***Dropout:*** 0.5 --> **0.45**
-- ***max_tokens:*** 8000
-- ***output_sequence_length:*** 20 
-- ***patience:*** 2
-- ***learning_rate:*** 0.0005
+--> mayor precision pero bajo recall
 
 ## Iteración 5
 
@@ -153,10 +145,24 @@ En esta iteración buscó regularizar aún más el modelo con la intención de d
 - ***max_tokens:*** 8000
 - ***output_sequence_length:*** 20 
 - ***patience:*** 2
-- ***learning_rate:*** 0.0005
-- ***tf.keras.layers:*** LSTM(32) --> **GRU(32)**
+- ***learning_rate:*** 0.0005 --> **0.0003**
 
-## Iteración 6 
+--> un poco mejor que la cuarta iteración 
+
+## Iteración 7
+
+- ***Embedding:*** 64
+- ***BiLSTM:*** 32
+- ***Dense:*** 32 
+- ***Dropout:*** 0.4 --> **0.35**
+- ***max_tokens:*** 8000
+- ***output_sequence_length:*** 20 --> **25**
+- ***patience:*** 2
+- ***learning_rate:*** 0.0005
+
+--> mejor F1 después de la segunda iteración 
+
+## Iteración 8 
 
 — cambios —
 
@@ -171,6 +177,8 @@ se añadieron métricas ROC-AUC y PR-AUC para bservar mejor la capacidad de sepa
 se calcularon las probabilidades sobre validation y luego se probaron varios thresholds como 0.3, 0.4, 0.5, 0.6 y 0.7 para elegir el mejor umbral en el F1-score de validation y posteriormente aplicarlo a test para encontrar un mejor equilibrio entre precision y recall ya que el valor por defecto de 0.5 no siempre es el que da el mejor desempeño global 
 
 - se añadieron semillas para reducir la variabilidad entre corridas y hacer los resultados más consistentes y comparables entre iteraciones 
+
+--> mejor F1 en validation con threshold 0.3 pero en test quedó debajo de la segunda iteración
 
 
 ---

@@ -120,7 +120,7 @@ En esta iteración se redujo la complejidad del modelo con los siguientes ajuste
 
 con el objetivo de construir una red más pequeña y controlada que no tienda al overfitting, además de adaptarse mejor a titulares de noticias breves con el uso de solo 8000 tokens en lugar de 10000 evitando que aprenda detalles innecesarios. Los resultados indican que el ajuste fue exitoso pues aun cuando la precision bajó ligeramente frente a la primera iteración, el recall subió considerablemente en especial en test (0.8812) indicando que el modelo detectó mejor los casos reales de sarcasmo y dejó pasar menos positivos, por lo que el F1-score en test subió a 0.8547 y fue el mejor valor de todas las iteraciones. En general la reducción moderada de complejidad combinada con una regularización equilibrada logró mejorar la sensibilidad del modelo sin penalizar mucho su precisión.
 
-## Iteración 3
+## Iteración 3 *****DEJAR
 
 En esta iteración buscó regularizar aún más el modelo con la intención de disminuir más la complejidad y suavizar el aprendizaje. Estos fueron los ajustes en los hiperparámetros
 
@@ -155,7 +155,7 @@ En esta iteración buscó regularizar aún más el modelo con la intención de d
 - ***patience:*** 2
 - ***leanring_rate:*** 0.0005 --> **0.0003**
 
-## Iteración 6
+## Iteración 6 *****DEJAR
 
 - ***Embedding:*** 64
 - ***BiLSTM:*** 32
@@ -177,6 +177,14 @@ En esta iteración buscó regularizar aún más el modelo con la intención de d
 - ***output_sequence_length:*** 20 --> **25**
 - ***patience:*** 2
 - ***learning_rate:*** 0.0005
+
+## Iteración 8 *****DEJAR
+
+— cambios —
+
+agregué métrica de curvas roc durante entrenamiento
+probé diferentes thresholds
+
 
 ---
 

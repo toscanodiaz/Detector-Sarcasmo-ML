@@ -120,7 +120,7 @@ En esta iteración se redujo la complejidad del modelo con los siguientes ajuste
 
 con el objetivo de construir una red más pequeña y controlada que no tienda al overfitting, además de adaptarse mejor a titulares de noticias breves con el uso de solo 8000 tokens en lugar de 10000 evitando que aprenda detalles innecesarios. Los resultados indican que el ajuste fue exitoso pues aun cuando la precision bajó ligeramente frente a la primera iteración, el recall subió considerablemente en especial en test (0.8812) indicando que el modelo detectó mejor los casos reales de sarcasmo y dejó pasar menos positivos, por lo que el F1-score en test subió a 0.8547 y fue el mejor valor de todas las iteraciones. En general la reducción moderada de complejidad combinada con una regularización equilibrada logró mejorar la sensibilidad del modelo sin penalizar mucho su precisión.
 
-## Iteración 3 *****DEJAR
+## Iteración 3
 
 En esta iteración buscó regularizar aún más el modelo con la intención de disminuir más la complejidad y suavizar el aprendizaje. Estos fueron los ajustes en los hiperparámetros
 
@@ -149,17 +149,6 @@ En esta iteración buscó regularizar aún más el modelo con la intención de d
 - ***Embedding:*** 64
 - ***BiLSTM:*** 32
 - ***Dense:*** 32 
-- ***Dropout:*** 0.45 --> **0.4**
-- ***max_tokens:*** 8000
-- ***output_sequence_length:*** 20 
-- ***patience:*** 2
-- ***leanring_rate:*** 0.0005 --> **0.0003**
-
-## Iteración 6 *****DEJAR
-
-- ***Embedding:*** 64
-- ***BiLSTM:*** 32
-- ***Dense:*** 32 
 - ***Dropout:*** 0.4
 - ***max_tokens:*** 8000
 - ***output_sequence_length:*** 20 
@@ -167,23 +156,21 @@ En esta iteración buscó regularizar aún más el modelo con la intención de d
 - ***learning_rate:*** 0.0005
 - ***tf.keras.layers:*** LSTM(32) --> **GRU(32)**
 
-## Iteración 7
-
-- ***Embedding:*** 64
-- ***BiLSTM:*** 32
-- ***Dense:*** 32 
-- ***Dropout:*** 4 --> **0.35**
-- ***max_tokens:*** 8000
-- ***output_sequence_length:*** 20 --> **25**
-- ***patience:*** 2
-- ***learning_rate:*** 0.0005
-
-## Iteración 8 *****DEJAR
+## Iteración 6 
 
 — cambios —
 
-- agregué métrica de curvas roc durante entrenamiento
-- probé diferentes thresholds
+- se mejoró la evaluación del modelo
+
+antes la métrica principal era accuracy y se usaba un umbral fijo de 0.5 para clasificar
+
+se añadieron métricas ROC-AUC y PR-AUC para bservar mejor la capacidad de separación del modelo y su comportamiento más allá de un solo valor de decisión 
+
+- ajuste de thresholds de decision
+
+se calcularon las probabilidades sobre validation y luego se probaron varios thresholds como 0.3, 0.4, 0.5, 0.6 y 0.7 para elegir el mejor umbral en el F1-score de validation y posteriormente aplicarlo a test para encontrar un mejor equilibrio entre precision y recall ya que el valor por defecto de 0.5 no siempre es el que da el mejor desempeño global 
+
+- se añadieron semillas para reducir la variabilidad entre corridas y hacer los resultados más consistentes y comparables entre iteraciones 
 
 
 ---

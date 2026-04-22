@@ -109,47 +109,51 @@ Las iteraciones se compararon objetivamaente gracias al uso de las métricas `ac
 
 En esta iteración se redujo la complejidad del modelo con los siguientes ajustes  
 
-- ***Embedding:*** 64
-- ***BiLSTM:*** 32
-- ***Dense:*** 32 
-- ***Dropout:*** 0.4
-- ***max_tokens:*** 8000
-- ***output_sequence_length:*** 25 
-- ***patience:*** 2
-- ***leaning_rate:*** 0.0005
+- ***Embedding:*** 128 --> **64**
+- ***BiLSTM:*** 64 --> **32**
+- ***Dense:*** 64 --> **32**
+- ***Dropout:*** 0.3 --> **0.4**
+- ***max_tokens:*** 10000 --> **8000**
+- ***output_sequence_length:*** 30 --> **25** 
+- ***patience:*** 3 --> **2**
+- ***learning_rate:*** **0.0005**
+
+con el objetivo de construir una red más pequeña y controlada que no tienda al overfitting, además de adaptarse mejor a titulares de noticias breves con el uso de solo 8000 tokens en lugar de 10000 evitando que aprenda detalles innecesarios. Los resultados indican que el ajuste fue exitoso pues aun cuando la precision bajó ligeramente frente a la primera iteración, el recall subió considerablemente en especial en test (0.8812) indicando que el modelo detectó mejor los casos reales de sarcasmo y dejó pasar menos positivos, por lo que el F1-score en test subió a 0.8547 y fue el mejor valor de todas las iteraciones. En general la reducción moderada de complejidad combinada con una regularización equilibrada logró mejorar la sensibilidad del modelo sin penalizar mucho su precisión.
 
 ## Iteración 3
 
+En esta iteración buscó regularizar aún más el modelo con la intención de disminuir más la complejidad y suavizar el aprendizaje. Estos fueron los ajustes en los hiperparámetros
+
 - ***Embedding:*** 64
 - ***BiLSTM:*** 32
 - ***Dense:*** 32 
-- ***Dropout:*** 0.5
-- ***max_tokens:*** 5000
-- ***output_sequence_length:*** 20 
+- ***Dropout:*** 0.4 --> **0.5**
+- ***max_tokens:*** 8000 --> **5000**
+- ***output_sequence_length:*** 25 --> **20**  
 - ***patience:*** 2
-- ***leaning_rate:*** 0.0005
+- ***learning_rate:*** 0.0005
 
 ## Iteración 4
 
 - ***Embedding:*** 64
 - ***BiLSTM:*** 32
 - ***Dense:*** 32 
-- ***Dropout:*** 0.45
+- ***Dropout:*** 0.5 --> **0.45**
 - ***max_tokens:*** 8000
 - ***output_sequence_length:*** 20 
 - ***patience:*** 2
-- ***leaning_rate:*** 0.0005
+- ***learning_rate:*** 0.0005
 
 ## Iteración 5
 
 - ***Embedding:*** 64
 - ***BiLSTM:*** 32
 - ***Dense:*** 32 
-- ***Dropout:*** 0.4
+- ***Dropout:*** 0.45 --> **0.4**
 - ***max_tokens:*** 8000
 - ***output_sequence_length:*** 20 
 - ***patience:*** 2
-- ***leaning_rate:*** 0.0003
+- ***leanring_rate:*** 0.0005 --> **0.0003**
 
 ## Iteración 6
 
@@ -160,19 +164,19 @@ En esta iteración se redujo la complejidad del modelo con los siguientes ajuste
 - ***max_tokens:*** 8000
 - ***output_sequence_length:*** 20 
 - ***patience:*** 2
-- ***leaning_rate:*** 0.0005
-- ***tf.keras.layers.GRU(32)***
+- ***learning_rate:*** 0.0005
+- ***tf.keras.layers:*** LSTM(32) --> **GRU(32)**
 
 ## Iteración 7
 
 - ***Embedding:*** 64
 - ***BiLSTM:*** 32
 - ***Dense:*** 32 
-- ***Dropout:*** 0.35
+- ***Dropout:*** 4 --> **0.35**
 - ***max_tokens:*** 8000
-- ***output_sequence_length:*** 25 
+- ***output_sequence_length:*** 20 --> **25**
 - ***patience:*** 2
-- ***leaning_rate:*** 0.0005
+- ***learning_rate:*** 0.0005
 
 ---
 

@@ -95,6 +95,16 @@ Esto indica que el modelo identificó correctamente 2591 titulares no sarcástic
 De forma general estas métricas indican que el modelo sí logró aprender patrones del sarcasmo en los titulares y que tuvo un buen desempeño para ser una primera implementación; el `accuracy` mayor al 85% y `F1-score` cercano a 0.85 en test indica que la arquitectura funciona bien para este problema, y como los resultados de validation y test son parecidos se puede decir que el modelo generaliza de forma adecuada y no solo memoriza los datos de entrenamiento. Sin embargo el comportamiento de `val_loss` durante el entrenamiento sugiere que todavía se puede mejorar ajustando algunos hiperparámetros por ejemplo el tamaño del embedding, el número de unidades de la LSTM, el valor de `Dropout` o la longitud máxima de las secuencias. 
 
 # Refinamiento del modelo 
+Posterior a la iteración inicial, se realizaron ajustes en los hiperparámetros para refinar el modelo y mejorar su capacidad de generalización, reduciendo las señales de overfitting que se apreciaron en el entrenamiento; en esa primera iteración se alcanzaron métricas sólidas tanto en validation como en test, sin embargo el `loss` en validation indica que el error empeoraba a medida que aumentaba el desempeño en train, sugiriendo que el modelo base sí tenía capacidad suficiente para aprender pero igualmente memorizaba en exceso, por lo que a partir de este punto se orientó el refinamiento a controlar la complejidad del modelo y estabiizar el entrenamiento para equilibrar `precision`, `recall` y `F1-score`. 
+
+El ajuste consistió básicamente en modificar de forma progresiva los hiperparámetros como el tamaño del `embedding` para evitar overfitting, reducir `max_tokens` y `output_sequence_length` para simplificar la entrada textual y eliminar ruido, ajuste del `learning_rate` paara suavizar la actualización de pesos y estabilizar el entrenamiento, y un cambio de LSTM a GRU para evaluar si una unidad recurrente más ligera mantendría o empeoraría el desempeño con menor complejidad. 
+
+Las iteraciones se compararon objetivamaente gracias al uso de las métricas `accuracy`, `precision`, `recall` y `F1-score`, esta última con mayor importancia en test ya que permite evaluar de manera equilibrada qué tan bien identifica el modelo los casos sarcásticos y qué tan confiables son sus predicciones. 
+
+## Comparativa de los ajustes realizados 
+
+<img width="1920" height="1080" alt="cambiosxiteracion" src="https://github.com/user-attachments/assets/3ffcd27e-051a-4834-96ec-10bb3604b054" />
+
 
 ## Iteración 2
 

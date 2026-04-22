@@ -92,7 +92,7 @@ La matriz de confusión en test fue
 
 Esto indica que el modelo identificó correctamente 2591 titulares no sarcásticos y 2292 sarcásticos, clasificó incorrectamente 406 no sarcásticos como sarcásticos y 435 sarcásticos como no sarcásticos; prácticamente se puede decir que el modelo se equivoca en ambos sentidos pero nuevamente lo hace de forma relativamente equilibrada. Que los falsos negativos sean ligeramente más que los falsos positivos sugiere que todavía hay un pequeño margen para mejorar la detección de titulares sarcásticos reales pero no compromete el desempeño general pues no es una diferencia muy grande.
 
-De forma general estas métricas indican que el modelo sí logró aprender patrones del sarcasmo en los titulares y que tuvo un buen desempeño para ser una primera implementación; el `accuracy` mayor al 85% y `F1-score` cercano a 0.85 en test indica que la arquitectura funciona bien para este problema, y como los resultados de validation y test son parecidos se puede decir que el modelo generaliza de forma adecuada y no solo memoriza los datos de entrenamiento. Sin embargo el comportamiento de `val_loss` durante el entrenamiento sugiere que todavía se puede mejorar ajustando algunos hiperparámetros por ejemplo el tamaño del embedding, el número de unidades de la LSTM, el valor de `Dropout` o la longitud máxima de las secuencias. 
+De forma general estas métricas indican que el modelo sí logró aprender patrones del sarcasmo en los titulares y que tuvo un buen desempeño para ser una primera implementación; el `accuracy` mayor al 85% y `F1-score` cercano a 0.85 en test indica que la arquitectura funciona bien para este problema, y como los resultados de validation y test son parecidos se puede decir que el modelo generaliza de forma adecuada y no solo memoriza los datos de entrenamiento. Sin embargo el comportamiento de `val_loss` durante el entrenamiento sugiere inicios de overfitting y todavía se puede mejorar ajustando algunos hiperparámetros por ejemplo el tamaño del embedding, el número de unidades de la LSTM, el valor de `Dropout` o la longitud máxima de las secuencias. 
 
 # Refinamiento del modelo 
 Posterior a la iteración inicial, se realizaron ajustes en los hiperparámetros para refinar el modelo y mejorar su capacidad de generalización, reduciendo las señales de overfitting que se apreciaron en el entrenamiento; en esa primera iteración se alcanzaron métricas sólidas tanto en validation como en test, sin embargo el `loss` en validation indica que el error empeoraba a medida que aumentaba el desempeño en train, sugiriendo que el modelo base sí tenía capacidad suficiente para aprender pero igualmente memorizaba en exceso, por lo que a partir de este punto se orientó el refinamiento a controlar la complejidad del modelo y estabiizar el entrenamiento para equilibrar `precision`, `recall` y `F1-score`. 
@@ -105,8 +105,9 @@ Las iteraciones se compararon objetivamaente gracias al uso de las métricas `ac
 
 <img width="1920" height="1080" alt="cambiosxiteracion" src="https://github.com/user-attachments/assets/3ffcd27e-051a-4834-96ec-10bb3604b054" />
 
-
 ## Iteración 2
+
+En esta iteración se redujo la complejidad del modelo con los siguientes ajustes  
 
 - ***Embedding:*** 64
 - ***BiLSTM:*** 32

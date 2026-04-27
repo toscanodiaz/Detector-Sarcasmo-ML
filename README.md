@@ -14,16 +14,16 @@ Como primer paso se cargó el archivo en formato JSON utilizando pandas y poster
 
 Después se definieron las variables del problema siendo `x` la variable independiente (los headlines) y `y` la variable dependiente (`is_sarcastic`) y comenzó el preprocesamiento, el cual consistió en limpiar y normalizar cada titular mediante la función `limpiar_texto` implementada en el archivo `clean.py`; todo el texto se convirtió a minúsculas para evitar confusión entre palabras iguales por diferenciar entre mayúsculas y minúsculas, también se eliminaron enlaces o URLs ya que no aportan información semántica relevante para la detección de sarcasmo en este contexto. Igualmente se removieron los números y los signos de puntuación porque no contribuyen a la interpretación de los titulares, además de que su eliminación ayuda a quitar el ruido en los datos. Para terminar se quitaron espacios innecesarios al inicio o al final de cada cadena de texto para obtener una versión homogénea de los titulares.
 
-Posteriormente e realizó la separación del conjunto de datos en train, test y validation usando la función `train_test_split` de scikit-learn en dos etapas; la división se hizo de forma que el 20% de los datos se fueron al conjunto de prueba y a partir del 80% restante se generó un conjunto de validación. Se estableció un valor fijo de `random_state = 42` para asegurar la reproducibilidad del experimento y también se utilizó el parámetro `stratify = y` para que las clases estén distribuídas uniformemente en los subconjuntos y evitar riesgo de overfitting o sesgos en el entrenamiento o evaluación del modelo. Como resultado final se obtuvieron 20,033 ejemplos para train, 2,862 para validation y 5,724 para test, lo cual permitió entrenar el modelo, monitorear su avance durante el ajuste y evaluar su desempeño sobre datos no vistos. 
+Posteriormente e realizó la separación del conjunto de datos en train, test y validation usando la función `train_test_split` de scikit-learn en dos etapas; la división se hizo de forma que el 20% de los datos se fueron al conjunto de prueba y a partir del 80% restante se generó un conjunto de validación. Se estableció un valor fijo de `random_state = 42` para asegurar la reproducibilidad del experimento y también se utilizó el parámetro `stratify = y` para mantener una proporción similar de clases en los subconjuntos y evitar que la evaluación esté sesgada por una distribución desigual entre sarcasmo y no sarcasmo. Como resultado final se obtuvieron 20,033 ejemplos para train, 2,862 para validation y 5,724 para test, lo cual permitió entrenar el modelo, monitorear su avance durante el ajuste y evaluar su desempeño sobre datos no vistos. 
 
-Ya que se está trabajando con texto es necesario convertirlo en representación numérica para poder aplicar algoritmos de clasificación, por lo que se aplicó la capa `TextVectorization` de Keras, configurada con `max_tokens = 8000` y `output_sequence_length = 25`. La capa aprende un vocabulario a partir del conjunto de entrenamiento y transforma cada titular en una secuencia de enteros de longitud fija. Una vez adaptada la capa con los datos de entrenamiento se transformaron los conjuntos de train, validation y test, obteniendo matrices con dimensiones (20033, 30), (2862, 30) y (5724, 30) respectivamente. 
+Ya que se está trabajando con texto es necesario convertirlo en representación numérica para poder aplicar algoritmos de clasificación, por lo que se aplicó la capa `TextVectorization` de Keras, configurada con `max_tokens = 8000` y `output_sequence_length = 25`. La capa aprende un vocabulario a partir del conjunto de entrenamiento y transforma cada titular en una secuencia de enteros de longitud fija. Una vez adaptada la capa con los datos de entrenamiento se transformaron los conjuntos de train, validation y test, obteniendo matrices con dimensiones (20033, 25), (2862, 25) y (5724, 25) respectivamente. 
 
 Finalmente se obtuvieron tres conjuntos secuenciales `X_train_vec`, `X_val_vec` y `X_test_vec` listos para ser utilizados como entrada del modelo; cada uno contiene los titulares transformados en secuencias enteras de longitud fija mediante `TextVectorization`. Al mismo tiempo, `y_train`, `y_val` y `y_test` contienen las etiquetas binarias asociadas a sarcasmo y no sarcasmo. 
 
 # Implementación del modelo
 Para la implementación del modelo se utilizó un enfoque de deep learning para clasificación binaria de texto. La elección de una red neuronal profunda se justifica porque el sarcasmo no depende únicamente de la presencia aislada de ciertas palabras, sino también del orden en que aparecen, de las relaciones contextuales entre términos y de contrastes semánticos dentro de una secuencia corta, por lo que se optó por una arquitectura recurrente capaz de procesar el texto como secuencia y no como un conjunto de palabras independientes. El flujo completo de entrenamiento se implementó en `sarcasm.py`, mientras que la limpieza textual se encapsuló en `clean.py` para poder reutilizarla tanto en entrenamiento como en la interfaz.
 
-La arquitectura final del modelo fue una red secuencial con una capa de entrada para secuencias de longitud fija, una capa `Embedding(input_dim=8000, output_dim=64)`, una capa `Bidirectional(LSTM(32))`, una capa `Dropout(0.4)`, una capa densa oculta de 64 neuronas con activación `ReLU`, una segunda capa `Dropout(0.4)` y una capa final `Dense(1, activation="sigmoid")`. 
+La arquitectura base utilizada en las mejores iteraciones del modelo fue una red secuencial con una capa de entrada para secuencias de longitud fija, una capa `Embedding(input_dim=8000, output_dim=64)`, una capa `Bidirectional(LSTM(32))`, una capa `Dropout(0.4)`, una capa densa oculta de 32 neuronas con activación `ReLU`, una segunda capa `Dropout(0.4)` y una capa final `Dense(1, activation="sigmoid")`. 
 
 La capa Embedding se utilizó porque una red neuronal no trabaja directamente con texto crudo, sino con representaciones numéricas densas; cada token fue proyectado a un vector de dimensión 64 pues tienen suficiente capacidad para aprender relaciones semánticas entre palabras pero no incrementan de forma excesiva el número de parámetros.
 
@@ -101,11 +101,14 @@ El ajuste consistió básicamente en modificar de forma progresiva los hiperpar�
 
 Las iteraciones se compararon objetivamaente gracias al uso de las métricas `accuracy`, `precision`, `recall` y `F1-score`, esta última con mayor importancia en test ya que permite evaluar de manera equilibrada qué tan bien identifica el modelo los casos sarcásticos y qué tan confiables son sus predicciones. 
 
+# Hallazgos relevantes
+
+> **Nota**: durante el refinamiento del modelo se realizaron varias pruebas intermedias modificando hiperparámetros como el tamaño del vocabulario (`max_tokens`), la longitud de secuencia (`output_sequence_length`), el nivel de regularización (`Dropout`), la tasa de aprendizaje (`learning_rate`), el tipo de capa recurrente y el ajuste del umbral de decisión, pero no todas las iteraciones se documentaron de forma individual porque algunas representaron cambios menores o variantes muy cercanas entre sí y los resultados no modificaron de manera significativa el desempeño general del modelo. Por esto la documentación de iteraciones se enfoca únicamente en las iteraciones 2, 3, 5, 7, 8 y 9 pues reflejan los hallazgos más relevantes del proceso como el primer mejor balance del modelo, el efecto de aumentar la regularización, el impacto de ajustar la tasa de aprendizaje, la recuperación de contexto con una mayor longitud de secuencia, la mejora metodológica mediante métricas adicionales y ajuste de threshold y la comparación final contra una arquitectura CNN/MaxPooling basada en el artículo de referencia.
+
 ## Comparativa de los ajustes realizados 
 
 <img width="1920" height="1080" alt="cambiosxiteracion" src="https://github.com/user-attachments/assets/3ffcd27e-051a-4834-96ec-10bb3604b054" />
 
-# Hallazgos relevantes
 ## Iteración 2
 
 En esta iteración se redujo la complejidad del modelo con los siguientes ajustes  
@@ -132,11 +135,13 @@ En esta iteración buscó regularizar aún más el modelo con la intención de d
 - ***max_tokens:*** 8000 --> **5000**
 - ***output_sequence_length:*** 25 --> **20**  
 - ***patience:*** 2
-- ***learning_rate:*** 0.0005
+- ***learning_rate:*** 0.0003
 
---> mayor precision pero bajo recall
+Se aumentó el `Dropout` de 0.4 a 0.5, se redujo el vocabulario máximo de 8000 a 5000 tokens y se disminuyó la longitud de secuencia de 25 a 20 palabras para evitar que el modelo aprendiera detalles demasiado específicos del conjunto de entrenamiento y obligarlo a concentrarse en patrones más generales del texto; esta regularización resultó demasiado fuerte pues aunque el modelo obtuvo una mayor precisión, su recall disminuyó implicando que fue más cuidadoso al clasificar un titular como sarcástico pero dejó escapar más casos reales de sarcasmo, o sea el modelo cometió menos falsos positivos pero aumentó los falsos negativos. Aunque esta iteración ayudó a controlar la complejidad, no fue la mejor opción para el objetivo principal del proyecto, ya que es muy importante detectar correctamente los titulares sarcásticos (priorizar true positives). 
 
 ## Iteración 5
+
+En esta iteración se conservó la arquitectura base pero se redujo el `learning_rate` de 0.0005 a 0.0003 para hacer que el aprendizaje fuera más gradual y evitar actualizaciones demasiado grandes en los pesos del modelo. 
 
 - ***Embedding:*** 64
 - ***BiLSTM:*** 32
@@ -147,9 +152,11 @@ En esta iteración buscó regularizar aún más el modelo con la intención de d
 - ***patience:*** 2
 - ***learning_rate:*** 0.0005 --> **0.0003**
 
---> un poco mejor que la cuarta iteración 
+Esta modificación produjo una ligera mejora respecto a la iteración 4 pues en test se alcanzó un accuracy de 0.8564, precision de 0.8642, recall de 0.8287 y F1-score de 0.8461; aunque el F1-score subió frente a la iteración 4 el recall siguió siendo menor que el de la iteración 2, demostrando que el modelo sigue siendo más conservador al detectar sarcasmo. Se encontró que reducir el learning rate ayudó a estabilizar el entrenamiento pero no fue suficiente para obtener el mejor balance entre precision y recall. 
 
 ## Iteración 7
+
+En la iteración 7 se regresó a la arquitectura con `BiLSTM`, se ajustó el `Dropout` de 0.4 a 0.35 y se aumentó nuevamente `output_sequence_length` de 20 a 25 para permitir que el modelo conserve más información del titular y tenga un poco más de capacidad de aprendizaje, pues se observó que las iteraciones con secuencia de 20 palabras tendían a perder recall. 
 
 - ***Embedding:*** 64
 - ***BiLSTM:*** 32
@@ -160,26 +167,25 @@ En esta iteración buscó regularizar aún más el modelo con la intención de d
 - ***patience:*** 2
 - ***learning_rate:*** 0.0005
 
---> mejor F1 después de la segunda iteración 
+La iteración logró uno de los mejores resultados después de la iteración 2 pues recuperó parte del balance entre precision y recall; reducir el `Dropout` permitió que el modelo no estuviera tan restringido durante el aprendizaje y la longitud de secuencia de 25 ayudó a conservar más contexto textual. No superó a la iteración 2 en test pero esta prueba confirmó que una regularización muy fuerte o una secuencia muy corta pueden limitar la detección de sarcasmo.
 
 ## Iteración 8 
 
-— cambios —
+La iteración 8 se enfocó en mejorar la forma de evaluación del modelo pues en las iteraciones anteriores el análisis se basaba principalmente en métricas como `accuracy`, `precision`, `recall` y `F1-score` y usaaba un threshold fijo de 0.5 para convertir las probabilidades en clases, por lo que en esta iteración se añadieron las métricas `ROC-AUC` y `PR-AUC` para observar mejor la capacidad de separación del modelo en varios puntos de decisión.
 
-- se mejoró la evaluación del modelo
+También se implementó un ajuste de threshold donde primero se calcularon las probabilidades del modelo sobre validation y después se probaron distintos umbrales (0.3, 0.4, 0.5, 0.6 y 0.7). El mejor threshold fue 0.3 porque obtuvo el mejor `F1-score` en validation; posteriormente ese mismo umbral se aplicó sobre test para evaluar si mejoraba el balance entre precision y recall. Los resultados de esta iteración fueron sólidos obteniendo un `F1-score` de 0.8651 en validation, `ROC-AUC` de 0.9406 y `PR-AUC` de 0.9359, lo que indica que el modelo tiene una buena capacidad para separar titulares sarcásticos y no sarcásticos. En test la iteración alcanzó `accuracy` de 0.8526, `precision` de 0.8201, `recall` de 0.8845 y `F1-score` de 0.8511. Aunque el F1-score quedó ligeramente por debajo de la iteración 2 la diferencia fue pequeña (0.8547 --> 0.8511).
 
-antes la métrica principal era accuracy y se usaba un umbral fijo de 0.5 para clasificar
+La principal ventaja de la iteración 8 fue que detectó más casos positivos de sarcasmo; en test obtuvo 2412 true positives y solo 315 false negatives, mientras que la iteración 2 obtuvo 2403 true positives y 324 false negatives, o sea que la octava iteración detectó más titulares sarcásticos reales pero también generó más falsos positivos. Esta se considera una iteración importante y candidata a modelo final al priorizar la detección de sarcasmo sobre la precisión estricta de las predicciones positivas.
 
-se añadieron métricas ROC-AUC y PR-AUC para bservar mejor la capacidad de separación del modelo y su comportamiento más allá de un solo valor de decisión 
+## Iteración 9 - Modelo comparativo basado en artículo de estado del arte 
 
-- ajuste de thresholds de decision
+Tomando como rerferencia el artíiculo de estado del arte se implementó la arquitectura `Embedding + CNN/MaxPooling + capas densas + Sigmoid` como prueba de mejora, ya que como los titulares son textos cortos pueden funcionar bien con una CNN pues aprende patrones locales de palabras como frases cortas o combinaciones típicas de sarcasmo (por ejemplo expresiones contradictorias, exageradas o irónicas); adicionalmente una CNN suele ser más ligera y rápida que una BiLSTM porque no procesa la secuencia paso a paso, más bien busca patrones relevantes en distintas posiciones del titular. Sin embargo no se esperaba una mejora relevante pues los resultados actuales reflejan que la BiLSTM ya captura el contexto en ambas direcciones, y aunnque la CNN puede mejorar la generalización/velocidad del modelo, igual podría perder una parte del contexto secuencial que sí aprende la BiLSTM. 
 
-se calcularon las probabilidades sobre validation y luego se probaron varios thresholds como 0.3, 0.4, 0.5, 0.6 y 0.7 para elegir el mejor umbral en el F1-score de validation y posteriormente aplicarlo a test para encontrar un mejor equilibrio entre precision y recall ya que el valor por defecto de 0.5 no siempre es el que da el mejor desempeño global 
+La novena iteración obtuvo un desempeño aceptable con un F1-score de 0.8529 en validation y 0.8358 en test, además de un ROC-AUC de 0.9215 y PR-AUC de 0.9102 en test, lo que demuestra que la CNN sí logró aprender patrones útiles en los titulares (combinaciones de palabras asociadas al sarcasmo), sin embargo su desempeño bajó al pasar a test, lo que indica una menor capacidad de generalización comparado al modelo anterior. La octava iteración obtuvo mejores resultados en test con accuracy de 0.8526, recall de 0.8845 y F1-score de 0.8511, superando a la iteración 9 (accuracy de 0.8398, recall de 0.8555 y F1-score de 0.8358); además la iteración 8 clasificó correcttamente más casos positivos de sarcasmo (2412 true positives) mientras que la CNN obtuvo 2333 true positives. Aunque la CNN tuvo una precisión muy similar generó más falsos negativos lo que es menos conveniente porque deja pasar más titulares sarcásticos sin detectarlos.
 
-- se añadieron semillas para reducir la variabilidad entre corridas y hacer los resultados más consistentes y comparables entre iteraciones 
 
---> mejor F1 en validation con threshold 0.3 pero en test quedó debajo de la segunda iteración
-
+## Conclusiones generales
+Aunque la iteración 2 obtuvo el F1-score más alto en test, la iteración 8 se seleccionó como modelo final porque ofrece una evaluación más completa y recupera más casos reales de sarcasmo, pues para el objetivo del proyecto es preferible reducir los falsos negativos y detectar más titulares sarcásticos aun cuando implique un ligero aumento de falsos positivos.
 
 ---
 

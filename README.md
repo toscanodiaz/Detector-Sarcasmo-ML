@@ -82,7 +82,7 @@ En el conjunto de prueba, los resultados fueron
 - recall = 0.8405
 - F1-score = 0.8450
 
-Los resultados son levemente inferiores a los de validation pero es normal al evaluar sobre datos completamente no vistos; se trata de una reducció pequeña por lo que se intepreta que el modelo generaliza razonablemente bien y que no se ajustó únicamente al conjunto de train. Particularmente mantener un F1-score cercano a 0.85 en test es una señal positiva porque resume equitativamente la capacidad del modelo para detectar sarcasmo sin generar muchos falsos positivos.
+Los resultados son levemente inferiores a los de validation pero es normal al evaluar sobre datos completamente no vistos; se trata de una reducció pequeña por lo que se intepreta que el modelo generaliza razonablemente bien y que no se ajustó únicamente al conjunto de train. Particularmente mantener un `F1-score` cercano a 0.85 en test es una señal positiva porque resume equitativamente la capacidad del modelo para detectar sarcasmo sin generar muchos falsos positivos.
 
 La matriz de confusión en test fue
 
@@ -122,7 +122,7 @@ En esta iteración se redujo la complejidad del modelo con los siguientes ajuste
 - ***patience:*** 3 --> **2**
 - ***learning_rate:*** **0.0005**
 
-con el objetivo de construir una red más pequeña y controlada que no tienda al overfitting, además de adaptarse mejor a titulares de noticias breves con el uso de solo 8000 tokens en lugar de 10000 evitando que aprenda detalles innecesarios. Los resultados indican que el ajuste fue exitoso pues aun cuando la precision bajó ligeramente frente a la primera iteración, el recall subió considerablemente en especial en test (0.8812) indicando que el modelo detectó mejor los casos reales de sarcasmo y dejó pasar menos positivos, por lo que el F1-score en test subió a 0.8547 y fue el mejor valor de todas las iteraciones. En general la reducción moderada de complejidad combinada con una regularización equilibrada logró mejorar la sensibilidad del modelo sin penalizar mucho su precisión.
+con el objetivo de construir una red más pequeña y controlada que no tienda al overfitting, además de adaptarse mejor a titulares de noticias breves con el uso de solo 8000 tokens en lugar de 10000 evitando que aprenda detalles innecesarios. Los resultados indican que el ajuste fue exitoso pues aun cuando `precision` bajó ligeramente frente a la primera iteración, el `recall` subió considerablemente en especial en test (0.8812) indicando que el modelo detectó mejor los casos reales de sarcasmo y dejó pasar menos positivos, por lo que el `F1-score` en test subió a 0.8547 y fue el mejor valor de todas las iteraciones. En general la reducción moderada de complejidad combinada con una regularización equilibrada logró mejorar la sensibilidad del modelo sin penalizar mucho su precisión.
 
 ## Iteración 3
 
@@ -152,7 +152,7 @@ En esta iteración se conservó la arquitectura base pero se redujo el `learning
 - ***patience:*** 2
 - ***learning_rate:*** 0.0005 --> **0.0003**
 
-Esta modificación produjo una ligera mejora respecto a la iteración 4 pues en test se alcanzó un accuracy de 0.8564, precision de 0.8642, recall de 0.8287 y F1-score de 0.8461; aunque el F1-score subió frente a la iteración 4 el recall siguió siendo menor que el de la iteración 2, demostrando que el modelo sigue siendo más conservador al detectar sarcasmo. Se encontró que reducir el learning rate ayudó a estabilizar el entrenamiento pero no fue suficiente para obtener el mejor balance entre precision y recall. 
+Esta modificación produjo una ligera mejora respecto a la iteración 4 pues en test se alcanzó un `accuracy` de 0.8564, `precision` de 0.8642, `recall` de 0.8287 y `F1-score` de 0.8461; aunque el `F1-score` subió frente a la iteración 4 el recall siguió siendo menor que el de la iteración 2, demostrando que el modelo sigue siendo más conservador al detectar sarcasmo. Se encontró que reducir el learning rate ayudó a estabilizar el entrenamiento pero no fue suficiente para obtener el mejor balance entre precision y recall. 
 
 ## Iteración 7
 
@@ -181,11 +181,68 @@ La principal ventaja de la iteración 8 fue que detectó más casos positivos de
 
 Tomando como rerferencia el artíiculo de estado del arte se implementó la arquitectura `Embedding + CNN/MaxPooling + capas densas + Sigmoid` como prueba de mejora, ya que como los titulares son textos cortos pueden funcionar bien con una CNN pues aprende patrones locales de palabras como frases cortas o combinaciones típicas de sarcasmo (por ejemplo expresiones contradictorias, exageradas o irónicas); adicionalmente una CNN suele ser más ligera y rápida que una BiLSTM porque no procesa la secuencia paso a paso, más bien busca patrones relevantes en distintas posiciones del titular. Sin embargo no se esperaba una mejora relevante pues los resultados actuales reflejan que la BiLSTM ya captura el contexto en ambas direcciones, y aunnque la CNN puede mejorar la generalización/velocidad del modelo, igual podría perder una parte del contexto secuencial que sí aprende la BiLSTM. 
 
-La novena iteración obtuvo un desempeño aceptable con un F1-score de 0.8529 en validation y 0.8358 en test, además de un ROC-AUC de 0.9215 y PR-AUC de 0.9102 en test, lo que demuestra que la CNN sí logró aprender patrones útiles en los titulares (combinaciones de palabras asociadas al sarcasmo), sin embargo su desempeño bajó al pasar a test, lo que indica una menor capacidad de generalización comparado al modelo anterior. La octava iteración obtuvo mejores resultados en test con accuracy de 0.8526, recall de 0.8845 y F1-score de 0.8511, superando a la iteración 9 (accuracy de 0.8398, recall de 0.8555 y F1-score de 0.8358); además la iteración 8 clasificó correcttamente más casos positivos de sarcasmo (2412 true positives) mientras que la CNN obtuvo 2333 true positives. Aunque la CNN tuvo una precisión muy similar generó más falsos negativos lo que es menos conveniente porque deja pasar más titulares sarcásticos sin detectarlos.
+La novena iteración obtuvo un desempeño aceptable con un `F1-score` de 0.8529 en validation y 0.8358 en test, además de un `ROC-AUC` de 0.9215 y `PR-AUC` de 0.9102 en test, lo que demuestra que la CNN sí logró aprender patrones útiles en los titulares (combinaciones de palabras asociadas al sarcasmo), sin embargo su desempeño bajó al pasar a test, lo que indica una menor capacidad de generalización comparado al modelo anterior. La octava iteración obtuvo mejores resultados en test con `accuracy` de 0.8526, `recall` de 0.8845 y `F1-score` de 0.8511, superando a la iteración 9 (`accuracy` de 0.8398, `recall` de 0.8555 y `F1-score` de 0.8358); además la iteración 8 clasificó correcttamente más casos positivos de sarcasmo (2412 true positives) mientras que la CNN obtuvo 2333 true positives. Aunque la CNN tuvo una precisión muy similar generó más falsos negativos lo que es menos conveniente porque deja pasar más titulares sarcásticos sin detectarlos.
 
 
 ## Conclusiones generales
 Aunque la iteración 2 obtuvo el F1-score más alto en test, la iteración 8 se seleccionó como modelo final porque ofrece una evaluación más completa y recupera más casos reales de sarcasmo, pues para el objetivo del proyecto es preferible reducir los falsos negativos y detectar más titulares sarcásticos aun cuando implique un ligero aumento de falsos positivos.
+
+<h3>Gráficas Iteración 8 (final)</h3>
+
+<table>
+  <tr>
+    <td align="center" width="50%">
+      <strong>Accuracy por época</strong><br><br>
+      <img src="https://github.com/user-attachments/assets/e19d3c9a-3bd4-4b22-92a2-59adde289fd9" width="520">
+    </td>
+    <td align="center" width="50%">
+      <strong>Loss por época</strong><br><br>
+      <img src="https://github.com/user-attachments/assets/c93a70e9-5177-4002-bcc9-5c77f1fcc926" width="520">
+    </td>
+  </tr>
+
+  <tr>
+    <td colspan="2">
+      <br>
+    </td>
+  </tr>
+
+  <tr>
+    <td align="center" width="50%">
+      <strong>Curva ROC</strong><br><br>
+      <img src="https://github.com/user-attachments/assets/b3e4ab55-d37e-40a8-810a-67897c5bed64" width="480">
+    </td>
+    <td align="center" width="50%">
+      <strong>Curva Precision-Recall</strong><br><br>
+      <img src="https://github.com/user-attachments/assets/2f94d966-53c5-4a3c-abec-c35c8c27dc9e" width="480">
+    </td>
+  </tr>
+
+  <tr>
+    <td colspan="2">
+      <br>
+    </td>
+  </tr>
+
+  <tr>
+    <td align="center" colspan="2">
+      <strong>Matriz de confusión</strong><br><br>
+      <img src="https://github.com/user-attachments/assets/e980f4d8-8d71-4a52-8e65-73fb76d2b050" width="460">
+    </td>
+  </tr>
+</table>
+
+## Interpretación de las gráficas de la Iteración 8
+
+En la gráfica de accuracy por época se observa que el `accuracy` de entrenamiento aumenta de forma constante pasando aproximadamente de 0.76 a 0.95, pero el `accuracy` de validation se mantiene casi estable alrededor de 0.86 y después disminuye ligeramente. lo que indica que el modelo sigue aprendiendo muy bien los datos de entrenamiento pero la mejora ya no se refleja en validation, por lo que comienza a aparecer una señal de overfitting después de las primeras épocas.
+
+La gráfica de loss por época confirma esta misma tendencia, pues el `loss` de entrenamiento disminuye de forma continua mientras que el `loss` de validation baja al inicio, alcanza su mejor punto cerca de la época 2 y después vuelve a subir; esto da a entender que el modelo empieza a ajustarse demasiado a los datos de entrenamiento or lo que el uso de `EarlyStopping` fue adecuado para recuperar los mejores pesos y evitar conservar una versión más sobreentrenada del modelo.
+
+La matriz de confusión muestra que el modelo clasificó correctamente 2468 titulares no sarcásticos y 2412 titulares sarcásticos, también cometió 529 falsos positivos y 315 falsos negativos, lo que apoya la decisión de usar esta iteración como modelo final pues logra recuperar una gran cantidad de casos positivos de sarcasmo y mantiene relativamente bajos los falsos negativos.
+
+La curva Precision-Recall obtuvo un `PR-AUC` de 0.9235 lo que indica un buen balance entre precision y recall en distintos umbrales de decisión; esta gráfica es especialmente relevante para el proyecto porque permite analizar el comportamiento del modelo al detectar la clase positiva (titulares sarcásticos). El valor alto de PR-AUC muestra que el modelo conserva un desempeño sólido aun cuando el threshold de clasificación cambia.
+
+Finalmente la curva ROC obtuvo un `ROC-AUC` de 0.9304, se mantiene claramente por encima de la línea del modelo aleatorio indicando que el modelo tiene una buena capacidad para separar titulares sarcásticos y no sarcásticos. Las gráficas muestran que la Iteración 8 tiene un buen desempeño general aunque con señales de overfitting controladas mediante early stopping y ajuste del threshold.
 
 ---
 

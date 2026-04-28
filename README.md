@@ -44,7 +44,12 @@ Se implementó una interfaz en el archivo [`UI.py`](https://github.com/toscanodi
 La interfaz permite que el usuario escriba un titular en inglés para posteriormente limpiarlo con la misma función `limpiar_texto`, vectorizar con `TextVectorization` y obtener la predicción del modelo; como salida muestra si el titular fue clasificado como sarcasmo o no sarcasmo junto con su puntaje. También se agregaron ejemplos de titulares sarcásticos y no sarcásticos para facilitar la prueba del modelo de forma rápida.
 
 # Implementación del modelo
+
 Para la implementación del modelo se utilizó un enfoque de deep learning para clasificación binaria de texto. La arquitectura base utilizada en las mejores iteraciones del modelo fue una red secuencial con una capa de entrada para secuencias de longitud fija, una capa `Embedding(input_dim=8000, output_dim=64)`, una capa `Bidirectional(LSTM(32))`, una capa `Dropout(0.4)`, una capa densa oculta de 32 neuronas con activación `ReLU`, una segunda capa `Dropout(0.4)` y una capa final `Dense(1, activation="sigmoid")`. La elección de una red neuronal profunda se justifica porque el sarcasmo no depende únicamente de la presencia aislada de ciertas palabras, sino también del orden en que aparecen, de las relaciones contextuales entre términos y de contrastes semánticos dentro de una secuencia corta, por lo que se optó por una arquitectura recurrente capaz de procesar el texto como secuencia y no como un conjunto de palabras independientes. El flujo completo de entrenamiento se implementó en [`sarcasm.py`](https://github.com/toscanodiaz/Detector-Sarcasmo-ML/blob/main/sarcasm.py), mientras que la limpieza textual se encapsuló en [`clean.py`](https://github.com/toscanodiaz/Detector-Sarcasmo-ML/blob/main/clean.py) para poder reutilizarla tanto en entrenamiento como en la interfaz.
+
+<img width="1009" height="332" alt="arquitectura" src="https://github.com/user-attachments/assets/91a20819-5448-4636-9adf-24cf82ef2e3b" /> 
+
+<br>
 
 La capa Embedding se utilizó porque una red neuronal no trabaja directamente con texto crudo, sino con representaciones numéricas densas; cada token fue proyectado a un vector de dimensión 64 pues tienen suficiente capacidad para aprender relaciones semánticas entre palabras pero no incrementan de forma excesiva el número de parámetros.
 
@@ -61,7 +66,7 @@ Finalmente el modelo entrenado se guardó en el archivo `modelo_dl.keras` y el v
 # Evaluación inicial 
 La evaluación inicial del modelo se realizó primero sobre el conjunto de validation para monitorear el entrenamiento y detectar el mejor punto de aprendizaje, y después sobre el conjunto de test para estimar la capacidad de generalización final sobre datos completamente no vistos. 
 
-## Iteración 1
+## Iteración 1 - línea base
 
 Se utilziaron los siguientes hiperparámetros, marcando la línea base del modelo: 
 
@@ -130,7 +135,7 @@ Las iteraciones se compararon objetivamaente gracias al uso de las métricas `ac
 
 <img width="1057" height="734" alt="cambiosxiteracion" src="https://github.com/user-attachments/assets/f451210c-8d2d-47f1-86e7-193045a30489" />
 
-## Iteración 2
+## Iteración 2 - reducción de complejidad
 
 En esta iteración se redujo la complejidad del modelo con los siguientes ajustes  
 
@@ -145,7 +150,7 @@ En esta iteración se redujo la complejidad del modelo con los siguientes ajuste
 
 con el objetivo de construir una red más pequeña y controlada que no tienda al overfitting, además de adaptarse mejor a titulares de noticias breves con el uso de solo 8000 tokens en lugar de 10000 evitando que aprenda detalles innecesarios. Los resultados indican que el ajuste fue exitoso pues aun cuando `precision` bajó ligeramente frente a la primera iteración, el `recall` subió considerablemente en especial en test (0.8812) indicando que el modelo detectó mejor los casos reales de sarcasmo y dejó pasar menos positivos, por lo que el `F1-score` en test subió a 0.8547 y fue el mejor valor de todas las iteraciones. En general la reducción moderada de complejidad combinada con una regularización equilibrada logró mejorar la sensibilidad del modelo sin penalizar mucho su precisión.
 
-## Iteración 3
+## Iteración 3 - regularización fuerte
 
 En esta iteración buscó regularizar aún más el modelo con la intención de disminuir más la complejidad y suavizar el aprendizaje. Estos fueron los ajustes en los hiperparámetros
 
@@ -160,7 +165,7 @@ En esta iteración buscó regularizar aún más el modelo con la intención de d
 
 Se aumentó el `Dropout` de 0.4 a 0.5, se redujo el vocabulario máximo de 8000 a 5000 tokens y se disminuyó la longitud de secuencia de 25 a 20 palabras para evitar que el modelo aprendiera detalles demasiado específicos del conjunto de entrenamiento y obligarlo a concentrarse en patrones más generales del texto; esta regularización resultó demasiado fuerte pues aunque el modelo obtuvo una mayor precisión, su recall disminuyó implicando que fue más cuidadoso al clasificar un titular como sarcástico pero dejó escapar más casos reales de sarcasmo, o sea el modelo cometió menos falsos positivos pero aumentó los falsos negativos. Aunque esta iteración ayudó a controlar la complejidad, no fue la mejor opción para el objetivo principal del proyecto, ya que es muy importante detectar correctamente los titulares sarcásticos (priorizar true positives). 
 
-## Iteración 5
+## Iteración 5 - reducción del learning rate
 
 En esta iteración se conservó la arquitectura base pero se redujo el `learning_rate` de 0.0005 a 0.0003 para hacer que el aprendizaje fuera más gradual y evitar actualizaciones demasiado grandes en los pesos del modelo. 
 
@@ -175,7 +180,7 @@ En esta iteración se conservó la arquitectura base pero se redujo el `learning
 
 Esta modificación produjo una ligera mejora respecto a la iteración 4 pues en test se alcanzó un `accuracy` de 0.8564, `precision` de 0.8642, `recall` de 0.8287 y `F1-score` de 0.8461; aunque el `F1-score` subió frente a la iteración 4 el recall siguió siendo menor que el de la iteración 2, demostrando que el modelo sigue siendo más conservador al detectar sarcasmo. Se encontró que reducir el learning rate ayudó a estabilizar el entrenamiento pero no fue suficiente para obtener el mejor balance entre precision y recall. 
 
-## Iteración 7
+## Iteración 7 - recuperación de contexto
 
 En la iteración 7 se regresó a la arquitectura con `BiLSTM`, se ajustó el `Dropout` de 0.4 a 0.35 y se aumentó nuevamente `output_sequence_length` de 20 a 25 para permitir que el modelo conserve más información del titular y tenga un poco más de capacidad de aprendizaje, pues se observó que las iteraciones con secuencia de 20 palabras tendían a perder recall. 
 
@@ -190,7 +195,7 @@ En la iteración 7 se regresó a la arquitectura con `BiLSTM`, se ajustó el `Dr
 
 La iteración logró uno de los mejores resultados después de la iteración 2 pues recuperó parte del balance entre precision y recall; reducir el `Dropout` permitió que el modelo no estuviera tan restringido durante el aprendizaje y la longitud de secuencia de 25 ayudó a conservar más contexto textual. No superó a la iteración 2 en test pero esta prueba confirmó que una regularización muy fuerte o una secuencia muy corta pueden limitar la detección de sarcasmo.
 
-## Iteración 8 
+## Iteración 8 - ajuste de threshold y métricas AUC
 
 La iteración 8 se enfocó en mejorar la forma de evaluación del modelo pues en las iteraciones anteriores el análisis se basaba principalmente en métricas como `accuracy`, `precision`, `recall` y `F1-score` y usaaba un threshold fijo de 0.5 para convertir las probabilidades en clases, por lo que en esta iteración se añadieron las métricas `ROC-AUC` y `PR-AUC` para observar mejor la capacidad de separación del modelo en varios puntos de decisión.
 
@@ -198,15 +203,11 @@ También se implementó un ajuste de threshold donde primero se calcularon las p
 
 La principal ventaja de la iteración 8 fue que detectó más casos positivos de sarcasmo; en test obtuvo 2412 true positives y solo 315 false negatives, mientras que la iteración 2 obtuvo 2403 true positives y 324 false negatives, o sea que la octava iteración detectó más titulares sarcásticos reales pero también generó más falsos positivos. Esta se considera una iteración importante y candidata a modelo final al priorizar la detección de sarcasmo sobre la precisión estricta de las predicciones positivas.
 
-## Iteración 9 - Modelo comparativo basado en artículo de estado del arte 
+## Modelo comparativo basado en artículo de estado del arte: CNN + MaxPooling
 
-Tomando como rerferencia el artíiculo de estado del arte se implementó la arquitectura `Embedding + CNN/MaxPooling + capas densas + Sigmoid` como prueba de mejora (implementado en el archivo [`sarcasmCNN.py`](https://github.com/toscanodiaz/Detector-Sarcasmo-ML/blob/main/sarcasmCNN.py), ya que como los titulares son textos cortos pueden funcionar bien con una CNN pues aprende patrones locales de palabras como frases cortas o combinaciones típicas de sarcasmo (por ejemplo expresiones contradictorias, exageradas o irónicas); adicionalmente una CNN suele ser más ligera y rápida que una BiLSTM porque no procesa la secuencia paso a paso, más bien busca patrones relevantes en distintas posiciones del titular. No replica completamente la arquitectura híbrida del artículo ya que no incluye el mecanismo de atención ni la combinación CNN + BiLSTM completa, más bien se implementó como una aproximación comparativa centrada en el componente convolucional CNN/MaxPooling para evaluar si la extracción de patrones locales mejoraba el desempeño frente al modelo BiLSTM, sin embargo no se esperaba una mejora relevante pues los resultados actuales reflejan que la BiLSTM ya captura el contexto en ambas direcciones, y aunnque la CNN puede mejorar la generalización/velocidad del modelo, igual podría perder una parte del contexto secuencial que sí aprende la BiLSTM. 
+Tomando como referencia el artíiculo de estado del arte se implementó la arquitectura `Embedding + CNN/MaxPooling + capas densas + Sigmoid` como prueba de mejora (implementado en el archivo [`sarcasmCNN.py`](https://github.com/toscanodiaz/Detector-Sarcasmo-ML/blob/main/sarcasmCNN.py), ya que como los titulares son textos cortos pueden funcionar bien con una CNN pues aprende patrones locales de palabras como frases cortas o combinaciones típicas de sarcasmo (por ejemplo expresiones contradictorias, exageradas o irónicas); adicionalmente una CNN suele ser más ligera y rápida que una BiLSTM porque no procesa la secuencia paso a paso, más bien busca patrones relevantes en distintas posiciones del titular. No replica completamente la arquitectura híbrida del artículo ya que no incluye el mecanismo de atención ni la combinación CNN + BiLSTM completa, más bien se implementó como una aproximación comparativa centrada en el componente convolucional CNN/MaxPooling para evaluar si la extracción de patrones locales mejoraba el desempeño frente al modelo BiLSTM, sin embargo no se esperaba una mejora relevante pues los resultados actuales reflejan que la BiLSTM ya captura el contexto en ambas direcciones, y aunnque la CNN puede mejorar la generalización/velocidad del modelo, igual podría perder una parte del contexto secuencial que sí aprende la BiLSTM. 
 
-La novena iteración obtuvo un desempeño aceptable con un `F1-score` de 0.8529 en validation y 0.8358 en test, además de un `ROC-AUC` de 0.9215 y `PR-AUC` de 0.9102 en test, lo que demuestra que la CNN sí logró aprender patrones útiles en los titulares (combinaciones de palabras asociadas al sarcasmo), sin embargo su desempeño bajó al pasar a test, lo que indica una menor capacidad de generalización comparado al modelo anterior. La octava iteración obtuvo mejores resultados en test con `accuracy` de 0.8526, `recall` de 0.8845 y `F1-score` de 0.8511, superando a la iteración 9 (`accuracy` de 0.8398, `recall` de 0.8555 y `F1-score` de 0.8358); además la iteración 8 clasificó correcttamente más casos positivos de sarcasmo (2412 true positives) mientras que la CNN obtuvo 2333 true positives. Aunque la CNN tuvo una precisión muy similar generó más falsos negativos lo que es menos conveniente porque deja pasar más titulares sarcásticos sin detectarlos.
-
-## Conclusiones generales
-
-La iteración 8 se considera el modelo final del proyecto ya que mantiene un buen desempeño general e incorpora una evaluación más completa mediante ROC-AUC, PR-AUC y ajuste de threshold; aunque la iteración 2 obtuvo el F1-score más alto en test, la iteración 8 recuperó más casos reales de sarcasmo y redujo los falsos negativos, por lo que se sigue seleccionando ya que para el objetivo del proyecto es preferible detectar más titulares sarcásticos aun cuando esto implique un ligero aumento de falsos positivos.
+Este segundo modelo obtuvo un desempeño aceptable con un `F1-score` de 0.8529 en validation y 0.8358 en test, además de un `ROC-AUC` de 0.9215 y `PR-AUC` de 0.9102 en test, lo que demuestra que la CNN sí logró aprender patrones útiles en los titulares (combinaciones de palabras asociadas al sarcasmo), sin embargo su desempeño bajó al pasar a test, lo que indica una menor capacidad de generalización comparado al modelo anterior. En la octava iteración del primer modelo, test obtuvo mejores resultados con `accuracy` de 0.8526, `recall` de 0.8845 y `F1-score` de 0.8511, superando al modelo con CNN (`accuracy` de 0.8398, `recall` de 0.8555 y `F1-score` de 0.8358); además la iteración 8 clasificó correcttamente más casos positivos de sarcasmo (2412 true positives) mientras que la CNN obtuvo 2333 true positives. Aunque la CNN tuvo una precisión muy similar generó más falsos negativos lo que es menos conveniente porque deja pasar más titulares sarcásticos sin detectarlos.
 
 <h3>Gráficas modelo final (iteración 8)</h3>
 
@@ -264,6 +265,10 @@ La matriz de confusión muestra que el modelo clasificó correctamente 2468 titu
 La curva Precision-Recall obtuvo un `PR-AUC` de 0.9235 lo que indica un buen balance entre precision y recall en distintos umbrales de decisión; esta gráfica es especialmente relevante para el proyecto porque permite analizar el comportamiento del modelo al detectar la clase positiva (titulares sarcásticos). El valor alto de PR-AUC muestra que el modelo conserva un desempeño sólido aun cuando el threshold de clasificación cambia.
 
 Finalmente la curva ROC obtuvo un `ROC-AUC` de 0.9304, se mantiene claramente por encima de la línea del modelo aleatorio indicando que el modelo tiene una buena capacidad para separar titulares sarcásticos y no sarcásticos. Las gráficas muestran que la Iteración 8 tiene un buen desempeño general aunque con señales de overfitting controladas mediante early stopping y ajuste del threshold.
+
+## Conclusiones generales
+
+La iteración 8 se considera el modelo final del proyecto ya que mantiene un buen desempeño general e incorpora una evaluación más completa mediante ROC-AUC, PR-AUC y ajuste de threshold; aunque la iteración 2 obtuvo el F1-score más alto en test, la iteración 8 recuperó más casos reales de sarcasmo y redujo los falsos negativos, por lo que se sigue seleccionando ya que para el objetivo del proyecto es preferible detectar más titulares sarcásticos aun cuando esto implique un ligero aumento de falsos positivos.
 
 ---
 

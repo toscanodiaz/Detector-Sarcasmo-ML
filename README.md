@@ -20,6 +20,22 @@ Ya que se está trabajando con texto es necesario convertirlo en representación
 
 Finalmente se obtuvieron tres conjuntos secuenciales `X_train_vec`, `X_val_vec` y `X_test_vec` listos para ser utilizados como entrada del modelo; cada uno contiene los titulares transformados en secuencias enteras de longitud fija mediante `TextVectorization`. Al mismo tiempo, `y_train`, `y_val` y `y_test` contienen las etiquetas binarias asociadas a sarcasmo y no sarcasmo. 
 
+# Referencia: artículo del estado del arte 
+
+Para fundamentar la implementación del modelo se tomó como referencia el artículo [Advancing news headline sarcasm detection through hybrid neural networks](https://link.springer.com/article/10.1007/s10791-025-09877-8), publicado en *Discover Computing*. El trabajo propone un modelo híbrido de deep learning para la detección de sarcasmo en titulares de noticias utilizando una arquitectura basada en embeddings, capas convolucionales, MaxPooling, mecanismos de atención, BiLSTM y una salida densa con activación sigmoide para realizar una clasificación binaria entre titulares sarcásticos y no sarcásticos; el artículo justifica esta combinación porque las capas CNN ayudan a extraer patrones locales o expresiones cortas dentro del titular mientras que la BiLSTM permite capturar dependencias contextuales en ambas direcciones del texto.
+
+Con base en dicha propuesta, este proyecto implementa una arquitectura más sencilla basada en **Embedding + Bidirectional LSTM + capas densas + Sigmoid**. Esta decisión se tomó para conservar la parte más relevante del enfoque secuencial del artículo, o sea el uso de una red bidireccional capaz de analizar el contexto anterior y posterior de cada palabra dentro del titular. No se replicó completamente la arquitectura propuesta en el artículo pero el modelo desarrollado mantiene la misma lógica general de trabajar con representaciones densas del texto y una salida sigmoide para resolver un problema de clasificación binaria.
+
+El artículo también sirvió como base para la comparación final realizada en la novena iteración, donde se implementó una arquitectura alternativa más cercana al enfoque convolucional del trabajo de referencia (embedding + CNN/MaxPooling + capas densas + sigmoid), lo que permitió evaluar si la extracción de patrones locales mediante convoluciones podía superar al modelo con BiLSTM desarrollado durante el proyecto. Sin embargo los resultados obtenidos mostraron que la octava iteración (basada en BiLSTM) tuvo mejor desempeño en test que la arquitectura CNN/MaxPooling, por lo que se conservó como modelo final.
+
+# Métricas 
+
+Para evaluar el desempeño del modelo se utilizaron varias métricas tomando como referencia el artículo del estado del arte, el cual reporta principalmente `accuracy`, `precision`, `recall` y `F1-score`, ya que una sola no permite interpretar completamente el comportamiento del clasificador: en primer lugar se consideró el `accuracy` porque permite conocer el porcentaje general de titulares clasificados correctamente pero igual puede ocultar diferencias entre errores de tipo falso positivo y falso negativo, lo que justifica el uso de métricas adicionales; se utilizó `precision` para medir qué tan confiables son las predicciones positivas del modelo (cuántos de los titulares clasificados como sarcásticos sí lo eran) y también `recall` para medir cuántos de los titulares sarcásticos reales fueron detectados correctamente. El recall fue especialmente importante para el proyecto ya que uno de los objetivos principales era reducir los falsos negativos y evitar que titulares sarcásticos pasaran como no sarcásticos.
+
+El `F1-score` se utilizó como métrica de equilibrio entre `precision` y `recall` ya que combina ambas en un solo valor. Fue útil para comparar iteraciones de forma más justa especialmente cuando un ajuste aumentaba la precisión pero disminuía el recall o viceversa. 
+
+Finalmente en las últimas iteraciones se añadieron `ROC-AUC` y `PR-AUC`. El `ROC-AUC` permite evaluar la capacidad general del modelo para separar titulares sarcásticos y no sarcásticos considerando distintos umbrales de decisión, y el `PR-AUC` para analizar directamente la relación entre precision y recall para la clase positiva (titulares sarcásticos). Estas métricas complementaron la evaluación basada en un único threshold y ayudaron a la selección del modelo final.
+
 # Implementación del modelo
 Para la implementación del modelo se utilizó un enfoque de deep learning para clasificación binaria de texto. La elección de una red neuronal profunda se justifica porque el sarcasmo no depende únicamente de la presencia aislada de ciertas palabras, sino también del orden en que aparecen, de las relaciones contextuales entre términos y de contrastes semánticos dentro de una secuencia corta, por lo que se optó por una arquitectura recurrente capaz de procesar el texto como secuencia y no como un conjunto de palabras independientes. El flujo completo de entrenamiento se implementó en `sarcasm.py`, mientras que la limpieza textual se encapsuló en `clean.py` para poder reutilizarla tanto en entrenamiento como en la interfaz.
 
@@ -107,7 +123,7 @@ Las iteraciones se compararon objetivamaente gracias al uso de las métricas `ac
 
 ## Comparativa de los ajustes realizados 
 
-<img width="1920" height="1080" alt="cambiosxiteracion" src="https://github.com/user-attachments/assets/3ffcd27e-051a-4834-96ec-10bb3604b054" />
+<img width="1057" height="734" alt="cambiosxiteracion" src="https://github.com/user-attachments/assets/f451210c-8d2d-47f1-86e7-193045a30489" />
 
 ## Iteración 2
 
@@ -187,7 +203,7 @@ La novena iteración obtuvo un desempeño aceptable con un `F1-score` de 0.8529 
 ## Conclusiones generales
 Aunque la iteración 2 obtuvo el F1-score más alto en test, la iteración 8 se seleccionó como modelo final porque ofrece una evaluación más completa y recupera más casos reales de sarcasmo, pues para el objetivo del proyecto es preferible reducir los falsos negativos y detectar más titulares sarcásticos aun cuando implique un ligero aumento de falsos positivos.
 
-<h3>Gráficas Iteración 8 (final)</h3>
+<h3>Gráficas modelo final (iteración 8)</h3>
 
 <table>
   <tr>
@@ -232,7 +248,7 @@ Aunque la iteración 2 obtuvo el F1-score más alto en test, la iteración 8 se 
   </tr>
 </table>
 
-## Interpretación de las gráficas de la Iteración 8
+### Interpretación de las gráficas 
 
 En la gráfica de accuracy por época se observa que el `accuracy` de entrenamiento aumenta de forma constante pasando aproximadamente de 0.76 a 0.95, pero el `accuracy` de validation se mantiene casi estable alrededor de 0.86 y después disminuye ligeramente. lo que indica que el modelo sigue aprendiendo muy bien los datos de entrenamiento pero la mejora ya no se refleja en validation, por lo que comienza a aparecer una señal de overfitting después de las primeras épocas.
 
